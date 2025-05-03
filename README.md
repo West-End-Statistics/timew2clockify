@@ -10,10 +10,7 @@ python -m venv venv
 ```
 
 2. Activate the virtual environment:
-- On Windows:
-```bash
-venv\Scripts\activate
-```
+
 - On macOS/Linux:
 ```bash
 source venv/bin/activate
@@ -28,5 +25,5 @@ pip install -r requirements.txt
 
 To run the project, execute:
 ```bash
-python src/main.py
+python src/timew2clockify.py --start 2025-05-01
 ```
