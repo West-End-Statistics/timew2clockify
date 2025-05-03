@@ -283,8 +283,8 @@ def migrate_to_clockify(entries, mapping, config_file, dry_run=False, interactiv
             continue
         
         # Format times for clockify-cli
-        start_str = start_time.strftime("%Y-%m-%dT%H:%M:%S%z")
-        end_str = end_time.strftime("%Y-%m-%dT%H:%M:%S%z")
+        start_str = start_time.strftime("%Y-%m-%dT%H:%M:%S")
+        end_str = end_time.strftime("%Y-%m-%dT%H:%M:%S")
         
         # Build the clockify-cli command
         cmd = [
