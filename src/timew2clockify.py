@@ -293,7 +293,9 @@ def migrate_to_clockify(entries, mapping, config_file, dry_run=False, interactiv
             "--project", project,
             "--description", description,
             "--when", start_str,
-            "--when-to-close", end_str
+            "--when-to-close", end_str,
+            "--allow-name-for-id",
+            "-i=0" # clockify  cli is usually interactive
         ]
         
         if dry_run:
