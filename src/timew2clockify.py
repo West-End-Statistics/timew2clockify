@@ -283,8 +283,8 @@ def migrate_to_clockify(entries, mapping, config_file, dry_run=False, interactiv
             continue
         
         # Format times for clockify-cli
-        start_str = start_time.strftime("%Y-%m-%dT%H:%M:%S")
-        end_str = end_time.strftime("%Y-%m-%dT%H:%M:%S")
+        start_str = start_time.strftime("%Y-%m-%d %H:%M:%S")
+        end_str = end_time.strftime("%Y-%m-%d %H:%M:%S")
         
         # Build the clockify-cli command
         cmd = [
@@ -304,6 +304,7 @@ def migrate_to_clockify(entries, mapping, config_file, dry_run=False, interactiv
         else:
             try:
                 print(f"Adding: {start_time} - {end_time} to {client}/{project}: {description}")
+                print(f"Running\n\t {' '.join(cmd)}")
                 result = subprocess.run(cmd, capture_output=True, text=True, check=True)
                 print(f"  Success: {result.stdout.strip()}")
                 success_count += 1
