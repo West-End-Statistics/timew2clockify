@@ -24,6 +24,7 @@ pip install -r requirements.txt
 ## Running the Project
 
 To run the project, execute:
+
 ```bash
-python src/timew2clockify.py --start 2025-05-01
+python src/timew2clockify.py --start 2025-05-01 --end 2025-05-31
 ```
