@@ -233,7 +233,15 @@ def get_timewarrior_entries(start_date=None, end_date=None):
     if start_date:
         cmd.extend(["from", start_date])
     if end_date:
-        cmd.extend(["-", end_date])
+        # Add one day to end_date to make the range inclusive
+        # since timewarrior's date range is exclusive of the end date
+        try:
+            end_dt = datetime.strptime(end_date, '%Y-%m-%d')
+            inclusive_end = (end_dt + timedelta(days=1)).strftime('%Y-%m-%d')
+            cmd.extend(["-", inclusive_end])
+        except ValueError:
+            # If date parsing fails, use the original end_date
+            cmd.extend(["-", end_date])
     
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, check=True)

@@ -10,7 +10,7 @@ import argparse
 import json
 import subprocess
 import sys
-from datetime import datetime
+from datetime import datetime, timedelta
 
 def parse_arguments():
     """Parse command line arguments."""
@@ -40,9 +40,18 @@ def parse_arguments():
 def get_clockify_entries(start_date, end_date):
     """Get time entries from Clockify within the specified date range."""
     try:
+        # Add one day to end_date to make the range inclusive
+        # since clockify-cli's date range appears to be exclusive of the end date
+        try:
+            end_dt = datetime.strptime(end_date, '%Y-%m-%d')
+            inclusive_end = (end_dt + timedelta(days=1)).strftime('%Y-%m-%d')
+        except ValueError:
+            # If date parsing fails, use the original end_date
+            inclusive_end = end_date
+        
         # Use clockify-cli report with JSON output to get entries
         result = subprocess.run(
-            ["clockify-cli", "report", start_date, end_date, "--json"],
+            ["clockify-cli", "report", start_date, inclusive_end, "--json"],
             capture_output=True,
             text=True,
             check=True
