@@ -144,6 +144,28 @@ def get_clockify_projects(client_id):
         print(f"Error parsing Clockify projects JSON: {e}")
         return []
 
+def find_project_id(client_name, project_name):
+    """Find project ID given client and project names."""
+    # First get the client ID
+    clients = get_clockify_clients()
+    client_id = None
+    
+    for client in clients:
+        if client["name"] == client_name:
+            client_id = client["id"]
+            break
+    
+    if not client_id:
+        return None
+    
+    # Then get the project ID
+    projects = get_clockify_projects(client_id)
+    for project in projects:
+        if project["name"] == project_name:
+            return project["id"]
+    
+    return None
+
 def prompt_for_client_project(tag, config_file):
     """Prompt user to select a client and project for an unmapped tag."""
     print(f"\nTag '{tag}' is not mapped to any Clockify client/project.")
@@ -311,8 +333,40 @@ def migrate_to_clockify(entries, mapping, config_file, dry_run=False, interactiv
                 print(f"  Success: {result.stdout.strip()}")
                 success_count += 1
             except subprocess.CalledProcessError as e:
-                print(f"  Error: {e.stderr.strip()}")
-                skipped_count += 1
+                error_msg = e.stderr.strip()
+                print(f"  Error: {error_msg}")
+                
+                # Try fallback method if the error is about project not found
+                if "No project with id or name containing" in error_msg:
+                    print(f"  Attempting fallback: looking up project ID...")
+                    project_id = find_project_id(client, project)
+                    
+                    if project_id:
+                        # Try using project ID directly
+                        fallback_cmd = [
+                            "clockify-cli", "manual",
+                            project_id,
+                            start_str,
+                            end_str,
+                            description,
+                            "--allow-name-for-id",
+                            "-i=0"
+                        ]
+                        
+                        try:
+                            print(f"  Fallback: Using project ID {project_id}")
+                            print(f"  Running\n\t {' '.join(fallback_cmd)}")
+                            result = subprocess.run(fallback_cmd, capture_output=True, text=True, check=True)
+                            print(f"  Fallback Success: {result.stdout.strip()}")
+                            success_count += 1
+                        except subprocess.CalledProcessError as fallback_e:
+                            print(f"  Fallback Error: {fallback_e.stderr.strip()}")
+                            skipped_count += 1
+                    else:
+                        print(f"  Fallback failed: Could not find project ID for {client}/{project}")
+                        skipped_count += 1
+                else:
+                    skipped_count += 1
     
     print(f"\nMigration summary:")
     print(f"  Successfully {'processed' if dry_run else 'migrated'}: {success_count}")
