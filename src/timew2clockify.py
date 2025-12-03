@@ -301,9 +301,9 @@ def migrate_to_clockify(entries, mapping, config_file, dry_run=False, interactiv
             skipped_count += 1
             continue
         
-        # Parse start and end times
+        # Parse start and end times (Timewarrior exports in UTC)
         start_time = datetime.fromisoformat(entry['start'].replace('Z', '+00:00'))
-        
+
         if 'end' in entry:
             end_time = datetime.fromisoformat(entry['end'].replace('Z', '+00:00'))
         else:
@@ -311,10 +311,14 @@ def migrate_to_clockify(entries, mapping, config_file, dry_run=False, interactiv
             print(f"Skipping ongoing entry: {entry.get('start')} - {', '.join(entry['tags'])}")
             skipped_count += 1
             continue
-        
-        # Format times for clockify-cli
-        start_str = start_time.strftime("%Y-%m-%d %H:%M:%S")
-        end_str = end_time.strftime("%Y-%m-%d %H:%M:%S")
+
+        # Convert from UTC to local timezone
+        start_time_local = start_time.astimezone()
+        end_time_local = end_time.astimezone()
+
+        # Format times for clockify-cli (will be interpreted as local time)
+        start_str = start_time_local.strftime("%Y-%m-%d %H:%M:%S")
+        end_str = end_time_local.strftime("%Y-%m-%d %H:%M:%S")
         
         # Build the clockify-cli command
         cmd = [
@@ -329,13 +333,13 @@ def migrate_to_clockify(entries, mapping, config_file, dry_run=False, interactiv
         ]
         
         if dry_run:
-            duration = end_time - start_time
+            duration = end_time_local - start_time_local
             hours = duration.total_seconds() / 3600
-            print(f"Would add: {start_time} - {end_time} ({hours:.2f}h) to {client}/{project}: {description}")
+            print(f"Would add: {start_time_local} - {end_time_local} ({hours:.2f}h) to {client}/{project}: {description}")
             success_count += 1
         else:
             try:
-                print(f"Adding: {start_time} - {end_time} to {client}/{project}: {description}")
+                print(f"Adding: {start_time_local} - {end_time_local} to {client}/{project}: {description}")
                 print(f"Running\n\t {' '.join(cmd)}")
                 result = subprocess.run(cmd, capture_output=True, text=True, check=True)
                 print(f"  Success: {result.stdout.strip()}")
